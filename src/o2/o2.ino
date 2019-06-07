@@ -68,18 +68,23 @@ Response codes
 -2 invalid response function exception
 -3 response timed out exception
 -4 invalid response CRC exception
+-5 modbus proto illegal func
+-6 modbus proto illegal data address
+-7 modbus proto illegal data value
+-8 modbus proto device failure
+
 
 4-20ma.io/ModbusMaster/group__constant.html#gaf69c1c360b84adc5bf1c7bbe071f1970
 
 This func expects int representations of hex error values and converts them 
 into errors in [-1, -4]
 */
-int parseError(float e){
+int parseError(int e){
     int ret;
-    if(e == 0)
-	ret = e;
-    else
-	ret = 0-((int)e % 223);
+    if(e >= 224 && e <= 227)
+	ret = 0-(e % 223);
+    else if(e >=1 && e <= 4)
+	ret = 0-(e+4);
     return ret;
 }
 
@@ -97,16 +102,32 @@ float readReg(int sensor, int reg){
     return val;    
 }
 
+void handleSensor(int i){
+    int res;
+    status[i] = readReg(i, STATUS_REG);
+    if(status[i] == IDLE || status[i] == STANDBY){
+	res = writeReg(i, ONOFF_REG, 1);
+	if(res < 0)
+	    status[i] = res;
+	else
+	    status[i] = readReg(i, STATUS_REG);
+    }
+}
+
 // If this func is taking an int parameter for value, can it be used for calibration?
 int writeReg(int sensor, int reg, int value){
-    int res;
+    int res, ret;
     modbus[sensor].begin(BAUD);
     res = node[sensor].writeSingleRegister(reg, value);
-    return parseError(res);
+    if(res == 0)
+	ret = res;
+    else
+	ret = parseError(res);
+    return ret;
 }
 
 void setup(){    
-    int i, curr_pin, SST_addr;    
+    int i, curr_pin, SST_addr, res;    
     Serial.begin(BAUD); // To USB output
    
     // Actual sensor addresses are indexed by 1, but
@@ -119,17 +140,13 @@ void setup(){
     }
     
     // Get status
-    for(i=0; i<NUM_SENSORS; i++){
-	modbus[i].begin(BAUD);
-	status[i] = readReg(i, STATUS_REG);
-	err[i] = status[i];
-    }
+    // for(i=0; i<NUM_SENSORS; i++){
+    // 	status[i] = readReg(i, STATUS_REG);
+    // }
     
     // If sensor is idle, turn it on
     for(i=0; i<NUM_SENSORS; i++){
-	modbus[i].begin(BAUD);
-	if(status[i] == IDLE || status[i] == STANDBY)
-	    err[i] = writeReg(i, ONOFF_REG, 1);
+	handleSensor(i);
     }
 
     // At this point ideally all sensors are turned on.
@@ -147,49 +164,48 @@ void setup(){
 
 int k = 0;
 
-Void handleSensor(int i){
-    status[i] = readReg(i, STATUS_REG);
-    err[i] = status[i];
-    if(status[i] == IDLE || status[i] == STANDBY)
-	err[i] = writeReg(i, ONOFF_REG, 1);
-}
-
 void loop(){
-    int i, buf_ptr = 0;
-    float data;    
+    int i, buf_ptr = 0, data;    
     char *buffer;
+    
     buffer = malloc(50);
     
     for(i=0; i<NUM_SENSORS; i++){
-	char errstr[20] = "ERR", *errval, output[10];
+	char errstr[10] = "ERR", *errval, output[10];
+	char statstr[10] = "STS";
 	errval = malloc(3);
-	modbus[i].begin(BAUD);
+
 	if(status[i] == ON){
 	    data = readReg(i, O2AVG_REG);
 	    if(data < 0){ // Error
-		// do something
+		handleSensor(i);
 	    }
-	    else
-		dtostrf(data, 2, 3, output);
+	    else{
+		dtostrf(data, 4, 0, output);
+	    }
+	}
+	else if(status[i] > 0){
+	    strcat(statstr, itoa(status[i], errval, 10));
+	    strcpy(output, statstr);
 	}
 	else{	    
-	    strcat(errstr, itoa(-1*err[i], errval, 10));
+	    strcat(errstr, itoa(status[i]*-1, errval, 10));
 	    strcpy(output, errstr);
-	    // Get status
-	    if(k==100)
+	    if(k==10)
 		handleSensor(i);
 	}
 	buf_ptr += snprintf(buffer+buf_ptr, 50-buf_ptr,
 			    " %s ", output);
 	free(errval);
     }
+    
     Serial.println(buffer);
     Serial.flush();
     free(buffer);
     
     k+=1;
-    k%=101;    
-    // delay(100);
+    k%=11;    
+    delay(100);
 }
 
 
