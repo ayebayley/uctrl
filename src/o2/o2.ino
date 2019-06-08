@@ -26,11 +26,12 @@
 #define O2AVG_REG  30001
 #define STATUS_REG 30004
 #define ERR_REG    30005
+#define CALSTS_REG 30018
 // Holding regs
-#define ONOFF_REG   40001
-#define CLCTRL_REG  40004 // Calibration control
-#define ADDR_REG    40006
-#define ERR_CLR_REG 40002
+#define ONOFF_REG  40001
+#define CLCTRL_REG 40004 // Calibration control
+#define ADDR_REG   40006
+#define ERRCLR_REG 40002
 
 // Starting PIN on the microcontroller
 const static unsigned int START_PIN PROGMEM = 4;
@@ -41,6 +42,11 @@ const static int STARTUP  PROGMEM = 1;
 const static int ON       PROGMEM = 2;
 const static int SHUTDOWN PROGMEM = 3;
 const static int STANDBY  PROGMEM = 4;
+
+// Calibration status codes
+const static int CAL_IDLE PROGMEM = 0;
+const static int CAL_PROG PROGMEM = 1;
+const static int CAL_DONE PROGMEM = 2;
 
 // SoftwareSerial modbus[NUM_SENSORS] = {
 //     SoftwareSerial(START_PIN, START_PIN+1),
@@ -58,7 +64,7 @@ ModbusMaster *node =malloc(sizeof(ModbusMaster)*4);
 
 // Status < 0 means there's an active error code in err[] for the sensor
 // Error == 0 means that there's sensor status value = valid
-int status[NUM_SENSORS], response[NUM_SENSORS], err[NUM_SENSORS];
+int status[NUM_SENSORS], cal[NUM_SENSORS];
 
 /*
 
@@ -118,7 +124,25 @@ int writeReg(int sensor, int reg, int value){
 void handleSensor(int i){
     int res;
     status[i] = readReg(i, STATUS_REG);
-    if(status[i] == IDLE || status[i] == STANDBY){
+    // cal[i] = readReg(i, CALSTS_REG);
+    if(cal[i] == -1){ // needs cal
+	// cal[i] = 0;
+	writeReg(i, ERRCLR_REG, 1); // clear errors.. why not
+	res = writeReg(i, CLCTRL_REG, 1);
+	if(res == 0)
+	    cal[i] = CAL_PROG;
+    }
+    if(cal[i] == CAL_DONE){
+	res = writeReg(i, CLCTRL_REG, 2); // Reset calibration
+	if(res < 0){
+	    status[i] = res;
+	}
+	else{
+	    status[i] = readReg(i, STATUS_REG);
+	    cal[i] = CAL_IDLE;
+	}
+    }
+    if((status[i] == IDLE || status[i] == STANDBY) && cal[i] != CAL_PROG){
 	res = writeReg(i, ONOFF_REG, 1);
 	if(res < 0)
 	    status[i] = res;
@@ -151,16 +175,20 @@ void setup(){
 }
 
 int k=0;
+/*
 
+TODO Error checking handling should be done periodically (ideally at CHK_DELAY)
+
+ */
 void loop(){
-    int i, buf_ptr = 0, data;    
+    int i, buf_ptr = 0, data, res;    
     char *buffer;
     
     buffer = malloc(50);
     
     for(i=0; i<NUM_SENSORS; i++){
 	char errstr[10] = "ERR", *errval, output[10];
-	char statstr[10] = "STS";
+	char statstr[10] = "STS", calstr[10] = "CAL";
 	errval = malloc(3);
 
 	if(status[i] == ON){
@@ -168,16 +196,32 @@ void loop(){
 	    if(data < 0){ // Error
 		handleSensor(i);
 	    }
+	    else if(data == 0){ // data==0 not correct but good enough for now
+		readReg(i, ERR_REG);
+		dtostrf(res, 6, 0, output);
+		// if(k == CHK_DELAY){ // calibrate
+		if(cal[i] == 0){
+		    cal[i] = -1;
+		    handleSensor(i);
+		}
+		// }
+	    }
 	    else{
 		dtostrf(data, 4, 0, output);
 	    }
+	}
+	else if(cal[i] != 0){
+	    strcat(calstr, itoa(cal[i], errval, 10));
+	    strcpy(output, calstr);
+	    if(k == CHK_DELAY)
+		handleSensor(i);
 	}
 	else if(status[i] >= 0){
 	    strcat(statstr, itoa(status[i], errval, 10));
 	    strcpy(output, statstr);
 	    if(k==CHK_DELAY)
 		handleSensor(i);
-	}
+	}	
 	else{	    
 	    strcat(errstr, itoa(status[i]*-1, errval, 10));
 	    strcpy(output, errstr);
@@ -187,7 +231,7 @@ void loop(){
 	buf_ptr += snprintf(buffer+buf_ptr, 50-buf_ptr,
 			    " %s ", output);
 	free(errval);
-	delay(4);
+	delay(3);
     }
     
     Serial.println(buffer);
