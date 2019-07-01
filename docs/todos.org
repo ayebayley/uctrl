@@ -1,7 +1,7 @@
 #+STARTUP: indent content
 
 * O2
-** TODO String construction in getVal() should be optimized
+** TODO FEATURE MINOR String construction in getVal() should be optimized
 - Base strings should be global and in progmem, these strings should be copied as needed in getVal
 ** DONE BUGFIX MAJOR Calibration routine falters when a single sensor is calibrated
 - This is bad because if unexpected sensors are calibrated, they will not necessarily have the pumps in the correct direction 
@@ -28,3 +28,6 @@
   - Instantiate a =queue= for each thread
   - Thread will block on =queue.get()=
   - If output is configured in conf, the main thread will push data into the output's queue 
+* Pressure
+** TODO BUGFIX MAJOR Pressure values are not correct
+- Likely an error with the formula used
