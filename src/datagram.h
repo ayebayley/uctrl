@@ -10,27 +10,22 @@ int parseCommand(struct cmd *_cmd, char cmd[14]) {
     char c_num[2], c_rw[2], c_reg[6], c_data[4];
     
     int num, rw, reg, data, offset = 0;
-    printf("cmd: %s\n", cmd);
 
     strncpy(c_num, cmd, 2);
-    printf("c_num %s\n", c_num);
     num=(int)strtol(c_num, NULL, 16);
     offset+=2;
     
     if(num == 10) { // Bridge mode
 	strncpy(c_rw, cmd+offset, 1);
-	printf("c_rw: %s\n", c_rw);
 	rw = (int)strtol(c_rw, NULL, 16);
 	offset+=1;
 	
 	strncpy(c_reg, cmd+offset, 4);
-	printf("c_reg: %s\n", c_reg);
 	reg = (int)strtol(c_reg, NULL, 16);
 	offset+=4;
 	
 	if(rw == 1) { // if write, get data
 	    strcpy(c_data, cmd+offset);
-	    printf("c_data: %s\n", c_data);
 	    data = (int)strtol(c_data, NULL, 16);
 	    offset+=1;
 	}
@@ -65,7 +60,6 @@ int getCommand(char *cmd_out, int cmd_num, int rw_in, int reg_in, int data_in) {
     
     if(rw_in == 1)
 	offset+=sprintf(cmd+offset, "%04x", data_in);
-    printf("offset: %d\n", offset);
     
     strcpy(cmd_out, cmd);
 }

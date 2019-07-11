@@ -5,17 +5,18 @@ void setup(){
 }
 
 void loop(){
-    char cmd_buf[14];
-    unsigned char c;
-    int i;
+    char *readval;
     struct cmd _cmd;
-    if(Serial.available()>0){
-	// Serial.readBytes(cmd_buf, 11);
-	// parseCommand(&_cmd, cmd_buf);
-	for(i=0; i<11 && Serial.available()>0; i++)
-	    c = Serial.read();
-	Serial.println(c);
+    readval = malloc(14);
+    if(Serial.available()){
+	Serial.readBytes(readval, 14);
+	// Serial.write(readval, 11);
+	parseCommand(&_cmd, readval);
+	Serial.println(_cmd.cmd_num);
+	Serial.println(_cmd.rw);
+	Serial.println(_cmd.reg);
+	Serial.println(_cmd.data);
 	Serial.flush();
-	// Serial.println(_cmd.cmd_num);
     }
+    free(readval);
 }
