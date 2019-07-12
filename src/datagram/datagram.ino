@@ -21,11 +21,12 @@ char getChecksum(char cmd[13]){
 }
 
 void loop(){
-    char *readval, checksum;
+    char *readval, checksum, garbage;
+    int i=0;
     struct cmd _cmd;
     readval = malloc(14);
     if(Serial.available()){
-	Serial.readBytes(readval, 12);
+	Serial.readBytes(readval, 13);
 	Serial.println(readval);
 	// checksum = getChecksum(readval);
 	parseCommand(&_cmd, readval);
@@ -33,11 +34,13 @@ void loop(){
 	Serial.println(_cmd.rw);
 	Serial.println(_cmd.reg);
 	Serial.println(_cmd.data);
-	// Serial.println(_cmd.checksum);
+	Serial.println(_cmd.checksum);
 	// if(strcpy(&checksum, &_cmd.checksum))
 	//     Serial.println("Match");
 	// else
 	//     Serial.println("No match");
+	// while(Serial.available() && i++<30)
+	//     garbage = Serial.read();
 	Serial.flush();
     }
     free(readval);

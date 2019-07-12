@@ -7,13 +7,14 @@ struct cmd{
     char checksum;
 };
 
-int parseCommand(struct cmd *_cmd, char cmd[13]) {
+int parseCommand(struct cmd *_cmd, char cmd[14]) {
     char *c_num, *c_rw, *c_reg, *c_data, *endptr, *checksum;
+    /* char checksum; */
     c_num = malloc(2);
-    c_rw = malloc(2);
-    c_reg = malloc(5);
+    c_rw = malloc(1);
+    c_reg = malloc(4);
     c_data = malloc(4);
-    checksum = malloc(2);
+    checksum = malloc(1);
     
     int num, rw, reg, data, offset = 0;
 
@@ -30,28 +31,27 @@ int parseCommand(struct cmd *_cmd, char cmd[13]) {
     offset+=4;
 	
     strncpy(c_data, cmd+offset, 4);
-    data = (int)strtol(c_data, NULL, 16);
+    data = (int)strtol(c_data, &endptr, 16);
     offset+=4;
 
-    /* strcpy(checksum, cmd+offset); */
+    strcpy(checksum, cmd+offset);
     
     _cmd->cmd_num = num;
     _cmd->rw = rw;
     _cmd->reg = reg;
-    _cmd->data = data;
-    /* _cmd->checksum = *checksum; */
+    _cmd->data = data;    
+    _cmd->checksum = *checksum;
     
     free(c_num);
     free(c_rw);
     free(c_reg);
     free(c_data);
     free(checksum);
-    
     return 1;
 }
 
 int getCommand(char *cmd_out, int cmd_num, int rw_in, int reg_in, int data_in) {
-    char num[2], rw[2], reg[4], data[4], cmd[14];
+    char num[2], rw[2], reg[4], data[4], cmd[12];
     int offset = 1;
     
     offset = sprintf(cmd, "%02x", cmd_num);
