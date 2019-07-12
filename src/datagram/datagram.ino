@@ -9,8 +9,8 @@ void loop(){
     struct cmd _cmd;
     readval = malloc(14);
     if(Serial.available()){
-	Serial.readBytes(readval, 14);
-	// Serial.write(readval, 11);
+	Serial.readBytes(readval, 12);
+	Serial.println(readval);
 	parseCommand(&_cmd, readval);
 	Serial.println(_cmd.cmd_num);
 	Serial.println(_cmd.rw);
