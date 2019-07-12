@@ -11,13 +11,14 @@ void setup(){
 }
 
 char getChecksum(char cmd[13]){
-    char *checksum;
-    checksum = malloc(2);
+    unsigned char checksum;
     
     checksum = cmd[0];
     for(int i=1; i<11; i++)
 	checksum+=cmd[i];
-    return *checksum;
+    checksum%=16;
+    sprintf(&checksum, "%x", checksum);
+    return checksum;
 }
 
 void loop(){
@@ -28,17 +29,18 @@ void loop(){
     if(Serial.available()){
 	Serial.readBytes(readval, 13);
 	Serial.println(readval);
-	// checksum = getChecksum(readval);
+	checksum = getChecksum(readval);
 	parseCommand(&_cmd, readval);
 	Serial.println(_cmd.cmd_num);
 	Serial.println(_cmd.rw);
 	Serial.println(_cmd.reg);
 	Serial.println(_cmd.data);
 	Serial.println(_cmd.checksum);
-	// if(strcpy(&checksum, &_cmd.checksum))
-	//     Serial.println("Match");
-	// else
-	//     Serial.println("No match");
+	Serial.println(checksum);
+	if(strcmp(checksum, _cmd.checksum)==0)
+	    Serial.println("Match");
+	else
+	    Serial.println("No match");
 	// while(Serial.available() && i++<30)
 	//     garbage = Serial.read();
 	Serial.flush();
