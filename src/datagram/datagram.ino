@@ -37,7 +37,7 @@ void loop(){
 	Serial.println(_cmd.data);
 	Serial.println(_cmd.checksum);
 	Serial.println(checksum);
-	if(strcmp(checksum, _cmd.checksum)==0)
+	if(checksum==_cmd.checksum)
 	    Serial.println("Match");
 	else
 	    Serial.println("No match");
