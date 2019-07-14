@@ -2,6 +2,8 @@
 
 In bridge mode (command 10 for now), if register is to be read, the rw byte should be 0 and the data bytes should be a bitflag of sensor IDs to be read. If register is to be written, rw should be >0 and equal to the sensor ID to be written, while data should be the bytes to be written
 
+- TODO currently this script expects a trailing newline at the end of the output (this is appended by echo by default), which is why 13 bytes are read from serial when the actual commands are only 12 bytes. in the future, when pyserial is used instead of readbytes, this might change.. changes should be made to the code accordingly
+
  */
 
 #include "datagram.h"
