@@ -139,7 +139,7 @@ def main():
             t = threading.Thread(target=handler_instance.handleOutput, name="t_"+module)
             output_threads.append(t)
             t.start()
-        except ModuleNotFoundError:
+        except:
             # TODO Log
             continue
         
@@ -148,7 +148,7 @@ def main():
         config.read(CLIENT_CONF) # Read config for changes
         values = getData(device)
         if len(values) <= 1: # only got the currtime, most likely timeout
-            device = handleTimeout(device)
+            # device = handleTimeout(device)
             pass
         else:
             doOutput(config, values)

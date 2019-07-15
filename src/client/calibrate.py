@@ -9,7 +9,7 @@ Codes are reset by this script after action has been taken. Success of the actio
 Device value in the calibrate.conf should be written by the client. This seems a bit hacky..
 '''
 
-import wiringpi as wp
+# import wiringpi as wp
 import time
 import configparser
 import serial
@@ -22,14 +22,14 @@ CHK_DELAY = 50 # num cycles to wait for checking changes in addr, signal_length,
 def sendCommands(code, device, pin, signal_length):
     dev = serial.Serial(device)
     print("Sending calibration code " + code + " to address " + device) # TODO log
-    wp.digitalWrite(pin, LOW)
+    # wp.digitalWrite(pin, LOW)
     epoch = time.time()
     curr_time = time.time()
     while curr_time - epoch <= signal_length:
         dev.write(bytes(code, encoding='utf-8'))
         time.sleep(2)
         curr_time = time.time()
-    wp.digitalWrite(pin, HIGH)
+    # wp.digitalWrite(pin, HIGH)
     
 def main():        
     config = configparser.ConfigParser()
@@ -38,9 +38,9 @@ def main():
     pin = int(config['device']['pin'])
     signal_length = int(config['device']['signal_length'])
 
-    wp.wiringPiSetupSys()
-    wp.pinMode(pin, 1)
-    wp.digitalWrite(pin, HIGH)
+    # wp.wiringPiSetupSys()
+    # wp.pinMode(pin, 1)
+    # wp.digitalWrite(pin, HIGH)
     k=0
     while True:
         config = configparser.ConfigParser()
