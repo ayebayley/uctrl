@@ -137,6 +137,35 @@ int onoff(int data){
     return 1;
 }
 
+int bridge(struct cmd _cmd){
+    int i, buf_ptr=0, sensor, regval, buf_sz = 50, retval;
+    char *buffer, *locbuf;
+    buffer = malloc(buf_sz);
+    
+    buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "O10 ");
+    
+    if(_cmd.rw == 0){ // Read
+	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "R ");
+	for(i=0; i<NUM_SENSORS; i++){
+	    if(_cmd.data & (1 << i) > 0){
+		sensor = NUM_SENSORS-1-i;
+		regval = readReg(sensor, _cmd.reg); delay(4);
+		buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%d|%d|%d ",
+				    sensor, _cmd.reg, regval);
+	    }
+	}
+    }
+    else if(_cmd.rw > 0){ // Write
+	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "W ");
+	retval = writeReg(_cmd.rw, _cmd.reg, _cmd.data); delay(4);
+	buffer+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%d|%d|%d|%d ",
+			 _cmd.rw, _cmd.reg, _cmd.data, retval);
+    }
+    Serial.println(buffer);
+    Serial.flush();
+    free(buffer);
+}
+
 int handleCommands(){
     char *readval, checksum;
     struct cmd _cmd;
@@ -154,6 +183,8 @@ int handleCommands(){
     case 2: // Command ID 2: On/off
 	onoff(_cmd.data);
 	break;
+    case 10: // Command ID 10: Bridge mode
+	bridge(_cmd);
     }
     return 1;
 }
