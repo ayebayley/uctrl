@@ -118,23 +118,42 @@ int getVal(int sensor, char *output, unsigned int cal_out=0){
     return retval;
 }
 
-int handleCommands(){
-    int cmd = 0, count = 0, i, garbage;
-    for(i=0; i<8 && Serial.available()>0; i++){
-	cmd = Serial.read();
-	if(i<=3){ // Handle power commands
-	    if(cmd == 48)
-		flag[i] = FLAG_OFF;
-	    else if(cmd == 49)
-		flag[i] = FLAG_NONE;
-	}
-	else if(i>3){ // Handle calibration commands
-	    if(cmd == 49 && flag[i%4] != FLAG_OFF)
-		flag[i%4] = FLAG_CAL;
-	}
+int calibrate(int data){
+    int i;
+    for(i=0; i<NUM_SENSORS; i++)
+	if((data & (1 << i)) > 0)
+	    flag[i] = FLAG_CAL;
+    return 1;
+}
+
+int onoff(int data){
+    int i;
+    for(i=0; i<NUM_SENSORS; i++){
+	if((data & (1 << i)) > 0)
+	    flag[i] = FLAG_OFF;
+	else
+	    flag[i] = FLAG_NONE;
     }
-    while(Serial.available() > 0 && count++<30)
-    	garbage = Serial.read();
+    return 1;
+}
+
+int handleCommands(){
+    char *readval, checksum;
+    struct cmd _cmd;
+    readval = malloc(14);
+
+    checksum = getChecksum(readval);
+    parseCommand(&_cmd, readval);
+    if(checksum != _cmd.checksum) // Checksum does not match: error
+	return -1; 
+    switch(_cmd.command){
+    case 1: // Command ID 1: Calibration
+	calibrate(_cmd.data);
+	break;
+    case 2:
+	onoff(_cmd.data);
+	break;
+    }
     return 1;
 }
 
