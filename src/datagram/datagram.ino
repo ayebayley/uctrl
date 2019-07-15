@@ -29,7 +29,7 @@ void loop(){
     struct cmd _cmd;
     readval = malloc(14);
     if(Serial.available()){
-	Serial.readBytes(readval, 13);
+	Serial.readBytes(readval, 12);
 	Serial.println(readval);
 	checksum = getChecksum(readval);
 	parseCommand(&_cmd, readval);
@@ -38,11 +38,12 @@ void loop(){
 	Serial.println(_cmd.reg);
 	Serial.println(_cmd.data);
 	Serial.println(_cmd.checksum);
-	Serial.println(checksum);
+	Serial.println(checksum);      
 	if(checksum==_cmd.checksum)
 	    Serial.println("Match");
 	else
 	    Serial.println("No match");
+	Serial.println(" ");
 	// while(Serial.available() && i++<30)
 	//     garbage = Serial.read();
 	Serial.flush();
