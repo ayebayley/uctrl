@@ -49,16 +49,3 @@ int parseCommand(struct cmd *_cmd, char cmd[14]) {
     free(checksum);
     return 1;
 }
-
-int getCommand(char *cmd_out, int cmd_num, int rw_in, int reg_in, int data_in) {
-    char num[2], rw[2], reg[4], data[4], cmd[12];
-    int offset = 1;
-    
-    offset = sprintf(cmd, "%02x", cmd_num);
-    offset+=sprintf(cmd+offset, "%x", rw_in);
-    offset+=sprintf(cmd+offset, "%x", reg_in);
-    
-    offset+=sprintf(cmd+offset, "%04x", data_in);
-    
-    strcpy(cmd_out, cmd);
-}
