@@ -122,7 +122,7 @@ int calibrate(int data){
     int i;
     for(i=0; i<NUM_SENSORS; i++)
 	if((data & (1 << i)) > 0)
-	    flag[i] = FLAG_CAL;
+	    flag[NUM_SENSORS-1-i] = FLAG_CAL;
     return 1;
 }
 
@@ -130,9 +130,9 @@ int onoff(int data){
     int i;
     for(i=0; i<NUM_SENSORS; i++){
 	if((data & (1 << i)) > 0)
-	    flag[i] = FLAG_OFF;
+	    flag[NUM_SENSORS-1-i] = FLAG_OFF;
 	else
-	    flag[i] = FLAG_NONE;
+	    flag[NUM_SENSORS-1-i] = FLAG_NONE;
     }
     return 1;
 }
@@ -141,16 +141,17 @@ int handleCommands(){
     char *readval, checksum;
     struct cmd _cmd;
     readval = malloc(14);
-
+    Serial.readBytes(readval, 12);
+    
     checksum = getChecksum(readval);
     parseCommand(&_cmd, readval);
     if(checksum != _cmd.checksum) // Checksum does not match: error
 	return -1; 
     switch(_cmd.command){
-    case 1: // Command ID 1: Calibration
+    case 1: // Command ID 1: Calibration	
 	calibrate(_cmd.data);
 	break;
-    case 2:
+    case 2: // Command ID 2: On/off
 	onoff(_cmd.data);
 	break;
     }
