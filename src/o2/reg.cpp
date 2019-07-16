@@ -1,4 +1,4 @@
-#include "o2.h"
+#include "reg.h"
 
 /*
 
@@ -21,7 +21,7 @@
   This func expects int representations of hex error values and converts them 
   into errors in [-1, -8]
 */
-int parseError(int e){
+int parseError(int e) {
     int ret;
     if(e >= 224 && e <= 227)
 	ret = 0-(e % 223);
@@ -30,7 +30,7 @@ int parseError(int e){
     return ret;
 }
 
-int readReg(int sensor, int reg){
+int readReg(int sensor, int reg, ModbusMaster *node) {
     int res;
     int val;
     res = node[sensor].readInputRegisters(reg, 1);
@@ -44,7 +44,7 @@ int readReg(int sensor, int reg){
     return val;
 }
 
-int writeReg(int sensor, int reg, int value){
+int writeReg(int sensor, int reg, int value, ModbusMaster *node) {
     int res, ret;
     res = node[sensor].writeSingleRegister(reg, value);
     if(res == 0)

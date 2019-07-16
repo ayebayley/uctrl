@@ -1,7 +1,10 @@
-#ifndef O2_LIB
-#define O2_LIB
+#ifndef O2_HEADERS
+#define O2_HEADERS
 
 #include <ModbusMaster.h>
+#include <SoftwareSerial.h>
+#include <string.h>
+
 #define NUM_SENSORS 4
 #define BAUD 9600
 
@@ -41,6 +44,7 @@ const static int FLAG_DONE PROGMEM = 2;
 const static int FLAG_OFF  PROGMEM = 3;
  
 ModbusMaster *node = malloc(sizeof(ModbusMaster)*4);
+SoftwareSerial modbus(4, 5);
 
 /*
   Status < 0 means there's an active error code in err[] for the sensor

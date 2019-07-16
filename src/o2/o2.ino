@@ -20,31 +20,28 @@ NOTES
   - Worth trying serial.end at the end of handleCommands()
 */
 
-#include <SoftwareSerial.h>
-#include <string.h>
 #include "o2.h"
-#include "o2reg.h"
+#include "reg.h"
 #include "datagram.h"
-SoftwareSerial modbus(4, 5);
 
 void handleSensor(int i){
     int res, cal_res;
-    status[i] = readReg(i, STATUS_REG); delay(4);
-    cal[i] = readReg(i, CALSTS_REG); delay(4);
+    status[i] = readReg(i, STATUS_REG, node); delay(4);
+    cal[i] = readReg(i, CALSTS_REG, node); delay(4);
     
     if(flag[i] == FLAG_CAL && cal[i] == CAL_IDLE){ // Calibrate
-	res = writeReg(i, CLCTRL_REG, 1); delay(4);
+	res = writeReg(i, CLCTRL_REG, 1, node); delay(4);
 	if(res < 0)
 	    status[i] = res;
 	else
-	    cal[i] = readReg(i, CALSTS_REG); delay(4);
+	    cal[i] = readReg(i, CALSTS_REG, node); delay(4);
     }
     else if(cal[i] == CAL_DONE){ // Reset sensor
-	res = writeReg(i, CLCTRL_REG, 2); delay(4);
+	res = writeReg(i, CLCTRL_REG, 2, node); delay(4);
 	if(res < 0)
 	    status[i] = res;
 	else{
-	    cal[i] = readReg(i, CALSTS_REG); delay(10);	    
+	    cal[i] = readReg(i, CALSTS_REG, node); delay(10);	    
 	    flag[i] = cal[i];
 	}
     }
@@ -52,18 +49,18 @@ void handleSensor(int i){
 	flag[i] = 0;
     }
     else if(flag[i] == FLAG_OFF){ // Manual Shutdown
-	res = writeReg(i, ONOFF_REG, 0); delay(4);
+	res = writeReg(i, ONOFF_REG, 0, node); delay(4);
 	if(res < 0)
 	    status[i] = res;
 	else
-	    status[i] = readReg(i, STATUS_REG);
+	    status[i] = readReg(i, STATUS_REG, node);
     }
     else if((status[i] == IDLE || status[i] == STANDBY) && flag[i] == FLAG_NONE){ // Turn ON
-	res = writeReg(i, ONOFF_REG, 1); delay(4);
+	res = writeReg(i, ONOFF_REG, 1, node); delay(4);
 	if(res < 0)
 	    status[i] = res;
 	else
-	    status[i] = readReg(i, STATUS_REG); // TODO clear errors
+	    status[i] = readReg(i, STATUS_REG, node); // TODO clear errors
     }    
 }
 
@@ -86,7 +83,7 @@ int getVal(int sensor, char *output, unsigned int cal_out=0){
 	retval = 1;
     }
     else if(status[sensor] == ON){    // Get O2 data
-	data = readReg(sensor, O2AVG_REG);
+	data = readReg(sensor, O2AVG_REG, node);
 	if(data < 0){                 // Failed to get data, output ERR
 	    strcat(errstr, itoa(data*-1, errval, 10));
 	    strcpy(output, errstr);	    
@@ -153,16 +150,16 @@ int bridge(struct cmd _cmd){
 	for(i=0; i<NUM_SENSORS; i++){
 	    if((_cmd.data & (1 << i)) > 0){
 		sensor = NUM_SENSORS-1-i;
-		regval = readReg(sensor, _cmd.reg); delay(4);
+		regval = readReg(sensor, _cmd.reg, node); delay(4);
 		buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr,
 				    "%d|%d|%d ",
-				    sensor, _cmd.reg, regval);
+				    sensor, _cmd.reg, regval, node);
 	    }
 	}
     }
     else if(_cmd.rw > 0){ // Write
 	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "W ");
-	retval = writeReg(_cmd.rw, _cmd.reg, _cmd.data); delay(4);
+	retval = writeReg(_cmd.rw, _cmd.reg, _cmd.data, node); delay(4);
 	buffer+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%d|%d|%d|%d ",
 			 _cmd.rw, _cmd.reg, _cmd.data, retval);
     }
