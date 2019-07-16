@@ -7,7 +7,7 @@ struct cmd{
     char checksum;
 };
 
-int parseCommand(struct cmd *_cmd, char cmd[14]){
+int parseCommand(struct cmd *_cmd, char cmd[13]){
     char *c_num, *c_rw, *c_reg, *c_data, *endptr, *checksum;
     /* char checksum; */
     c_num = malloc(2);

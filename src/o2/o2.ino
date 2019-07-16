@@ -138,19 +138,24 @@ int onoff(int data){
 }
 
 int bridge(struct cmd _cmd){
-    int i, buf_ptr=0, sensor, regval, buf_sz = 50, retval;
+    int i, buf_ptr=0, sensor, regval, buf_sz = 100, retval;
     char *buffer, *locbuf;
     buffer = malloc(buf_sz);
-    
+    Serial.println("BRIDGE");
     buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "O10 ");
-    
+    Serial.println(_cmd.command);
+    Serial.println(_cmd.rw);
+    Serial.println(_cmd.reg);
+    Serial.println(_cmd.data);
+    Serial.println(_cmd.checksum);
     if(_cmd.rw == 0){ // Read
 	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "R ");
 	for(i=0; i<NUM_SENSORS; i++){
-	    if(_cmd.data & (1 << i) > 0){
+	    if((_cmd.data & (1 << i)) > 0){
 		sensor = NUM_SENSORS-1-i;
 		regval = readReg(sensor, _cmd.reg); delay(4);
-		buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%d|%d|%d ",
+		buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr,
+				    "%d|%d|%d ",
 				    sensor, _cmd.reg, regval);
 	    }
 	}
@@ -169,7 +174,7 @@ int bridge(struct cmd _cmd){
 int handleCommands(){
     char *readval, checksum;
     struct cmd _cmd;
-    readval = malloc(14);
+    readval = malloc(13);
     Serial.readBytes(readval, 12);
     
     checksum = getChecksum(readval);
