@@ -117,7 +117,7 @@ int getVal(int sensor, char *output, unsigned int cal_out=0){
 
 int calibrate(int data){
     int i;
-    for(i=0; i<NUM_SENSORS; i++)
+    for(i=NUM_SENSORS-1; i>=0; i--)
 	if((data & (1 << i)) > 0)
 	    flag[NUM_SENSORS-1-i] = FLAG_CAL;
     return 1;
@@ -125,7 +125,7 @@ int calibrate(int data){
 
 int onoff(int data){
     int i;
-    for(i=0; i<NUM_SENSORS; i++){
+    for(i=NUM_SENSORS-1; i>=0; i--){
 	if((data & (1 << i)) > 0)
 	    flag[NUM_SENSORS-1-i] = FLAG_OFF;
 	else
@@ -136,36 +136,39 @@ int onoff(int data){
 
 int bridge(struct cmd _cmd){
     int i, buf_ptr=0, sensor, regval, buf_sz = 100, retval;
-    char *buffer, *locbuf;
+    char *buffer, *locbuf, garbage;
     buffer = malloc(buf_sz);
-    Serial.println("BRIDGE");
+    
     buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "O10 ");
-    Serial.println(_cmd.command);
+    
     Serial.println(_cmd.rw);
-    Serial.println(_cmd.reg);
-    Serial.println(_cmd.data);
-    Serial.println(_cmd.checksum);
+    
     if(_cmd.rw == 0){ // Read
 	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "R ");
-	for(i=0; i<NUM_SENSORS; i++){
+	for(i=NUM_SENSORS-1; i>=0; i--){
 	    if((_cmd.data & (1 << i)) > 0){
 		sensor = NUM_SENSORS-1-i;
 		regval = readReg(sensor, _cmd.reg, node); delay(4);
 		buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr,
-				    "%d|%d|%d ",
-				    sensor, _cmd.reg, regval, node);
+				    "%u|%u|%d ",
+				    sensor+1, _cmd.reg, regval);
 	    }
 	}
+	Serial.println(buffer);	
+	free(buffer);
+	Serial.flush();
     }
-    else if(_cmd.rw > 0){ // Write
+    else{ // Write
 	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "W ");
-	retval = writeReg(_cmd.rw, _cmd.reg, _cmd.data, node); delay(4);
-	buffer+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%d|%d|%d|%d ",
-			 _cmd.rw, _cmd.reg, _cmd.data, retval);
+	// retval = writeReg(_cmd.rw-1, _cmd.reg,
+	// 		  _cmd.data, node);
+	// retval=0;
+	buf_ptr+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%u|%u|%u|%d ",
+			  _cmd.rw, _cmd.reg, _cmd.data, retval);
+	Serial.println(buffer);	
+	free(buffer);
     }
-    Serial.println(buffer);
-    Serial.flush();
-    free(buffer);
+    return 1;
 }
 
 int handleCommands(){
@@ -176,9 +179,13 @@ int handleCommands(){
     
     checksum = getChecksum(readval);
     parseCommand(&_cmd, readval);
-    if(checksum != _cmd.checksum) // Checksum does not match: error
-	return -1; 
+    Serial.println(_cmd.checksum);
+    Serial.println(checksum);
+    if(checksum != _cmd.checksum)
+	_cmd.command = 0;
     switch(_cmd.command){
+    case 0:
+	break;
     case 1: // Command ID 1: Calibration	
 	calibrate(_cmd.data);
 	break;
@@ -187,7 +194,9 @@ int handleCommands(){
 	break;
     case 10: // Command ID 10: Bridge mode
 	bridge(_cmd);
+	break;
     }
+    free(readval);
     return 1;
 }
 

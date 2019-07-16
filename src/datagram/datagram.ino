@@ -7,9 +7,49 @@ In bridge mode (command 10 for now), if register is to be read, the rw byte shou
  */
 
 #include "datagram.h"
-
+#define NUM_SENSORS 4
 void setup(){
     Serial.begin(9600);
+}
+
+
+int bridge(struct cmd _cmd){
+    int i, buf_ptr=0, sensor, regval, buf_sz = 30, retval;
+    char *buffer, *locbuf;
+    buffer = malloc(buf_sz);
+
+    buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "O10 ");
+    Serial.println(_cmd.command);
+    Serial.println(_cmd.rw);
+    Serial.println(_cmd.reg);
+    Serial.println(_cmd.data);
+    Serial.println(_cmd.checksum);
+    if(_cmd.rw == 0){ // Read
+	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "R ");
+	for(i=NUM_SENSORS-1; i>=0; i--){
+	    if((_cmd.data & (1 << i)) > 0){
+		sensor = NUM_SENSORS-1-i;
+		// regval = readReg(sensor, _cmd.reg, node); delay(4);
+		buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr,
+				    "%u|%u|%d ",
+				    sensor+1, _cmd.reg, regval);
+	    }
+	}
+	Serial.println(buffer);	
+	free(buffer);
+	Serial.flush();
+    }
+    else{ // Write
+	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "W ");
+	// retval = writeReg((int)_cmd.rw-1, (int)_cmd.reg,
+	// 		  (int)_cmd.data, node); delay(4);
+	buffer+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%u|%u|%u|%d ",
+			 _cmd.rw, _cmd.reg, _cmd.data, retval);
+	Serial.println(buffer);	
+	free(buffer);
+	Serial.flush();
+    }
+    return 1;
 }
 
 char getChecksum(char cmd[13]){

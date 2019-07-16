@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 struct cmd{
-    unsigned int cmd_num, rw, reg, data;
+    unsigned int command, rw, reg, data;
     char checksum;
 };
 
@@ -36,7 +36,7 @@ int parseCommand(struct cmd *_cmd, char cmd[14]) {
 
     strcpy(checksum, cmd+offset);
     
-    _cmd->cmd_num = num;
+    _cmd->command = num;
     _cmd->rw = rw;
     _cmd->reg = reg;
     _cmd->data = data;    
