@@ -135,15 +135,14 @@ int onoff(int data){
 }
 
 int bridge(struct cmd _cmd){
-    int i, buf_ptr=0, sensor, regval, buf_sz = 100, retval;
+    int i, buf_ptr=0, sensor, regval, buf_sz = 100, retval, rw, handleflag;
     char *buffer, *locbuf, garbage;
     buffer = malloc(buf_sz);
+
+    rw = ((int)_cmd.rw)%48;
     
     buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "O10 ");
-    
-    Serial.println(_cmd.rw);
-    
-    if(_cmd.rw == 0){ // Read
+    if(rw == 0){ // Read
 	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "R ");
 	for(i=NUM_SENSORS-1; i>=0; i--){
 	    if((_cmd.data & (1 << i)) > 0){
@@ -157,21 +156,24 @@ int bridge(struct cmd _cmd){
 	Serial.println(buffer);	
 	free(buffer);
 	Serial.flush();
+	handleflag=0;
     }
-    else{ // Write
+    else if(rw > 0){ // Write	
 	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "W ");
-	// retval = writeReg(_cmd.rw-1, _cmd.reg,
-	// 		  _cmd.data, node);
-	// retval=0;
-	buf_ptr+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%u|%u|%u|%d ",
+	sensor=rw;
+	sensor=sensor-1;
+	retval = writeReg(sensor, _cmd.reg, _cmd.data, node);
+	buf_ptr+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%c|%u|%u|%d ",
 			  _cmd.rw, _cmd.reg, _cmd.data, retval);
 	Serial.println(buffer);	
 	free(buffer);
+	handleflag=1;
     }
-    return 1;
+    return handleflag;
 }
 
 int handleCommands(){
+    int handleflag;
     char *readval, checksum;
     struct cmd _cmd;
     readval = malloc(13);
@@ -179,8 +181,6 @@ int handleCommands(){
     
     checksum = getChecksum(readval);
     parseCommand(&_cmd, readval);
-    Serial.println(_cmd.checksum);
-    Serial.println(checksum);
     if(checksum != _cmd.checksum)
 	_cmd.command = 0;
     switch(_cmd.command){
@@ -193,11 +193,11 @@ int handleCommands(){
 	onoff(_cmd.data);
 	break;
     case 10: // Command ID 10: Bridge mode
-	bridge(_cmd);
+	handleflag=bridge(_cmd);
 	break;
     }
     free(readval);
-    return 1;
+    return handleflag;
 }
 
 void setup(){    
@@ -228,7 +228,7 @@ void setup(){
 int k=0;
 
 void loop(){
-    int i, buf_ptr = 0, data, retval, handle_flag[] = {0,0,0,0};    
+    int i, buf_ptr = 0, data, retval, handle_flag[] = {0,0,0,0}, hf;    
     char *buffer, *output;    
 
     buffer = malloc(50);
@@ -258,9 +258,9 @@ void loop(){
     free(buffer);
     
     if(k==CHK_DELAY && Serial.available()){
-	handleCommands();
+	hf=handleCommands();
 	for(i=0; i< NUM_SENSORS; i++)
-	    if(flag[i] == FLAG_CAL || flag[i] == FLAG_OFF)
+	    if(flag[i] == FLAG_CAL || flag[i] == FLAG_OFF || hf==1)
 		handle_flag[i] = 1;	
     }
     

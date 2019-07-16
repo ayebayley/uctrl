@@ -15,8 +15,7 @@ int parseCommand(struct cmd *_cmd, char cmd[13]) {
     num=(int)strtol(c_num, NULL, 16);
     offset+=2;
     
-    strncpy(c_rw, cmd+offset, 1);
-    rw = (int)strtol(c_rw, NULL, 16);
+    strncpy(c_rw, cmd+offset, 1);    
     offset+=1;
 	
     strncpy(c_reg, cmd+offset, 4);
@@ -30,7 +29,7 @@ int parseCommand(struct cmd *_cmd, char cmd[13]) {
     strcpy(checksum, cmd+offset);
     
     _cmd->command = num;
-    _cmd->rw = rw;
+    _cmd->rw = *c_rw;
     _cmd->reg = reg;
     _cmd->data = data;    
     _cmd->checksum = *checksum;
