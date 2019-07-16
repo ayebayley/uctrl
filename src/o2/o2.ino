@@ -160,8 +160,7 @@ int bridge(struct cmd _cmd){
     }
     else if(rw > 0){ // Write	
 	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "W ");
-	sensor=rw;
-	sensor=sensor-1;
+	sensor=rw-1;
 	retval = writeReg(sensor, _cmd.reg, _cmd.data, node);
 	buf_ptr+=snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "%c|%u|%u|%d ",
 			  _cmd.rw, _cmd.reg, _cmd.data, retval);
