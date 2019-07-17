@@ -201,7 +201,7 @@ int handleCommands(){
 
 void setup(){    
     int i, curr_pin, SST_addr;
-    
+
     Serial.setTimeout(2000);
     Serial.begin(BAUD); // To USB output
     modbus.begin(BAUD); // To RS485 bus
@@ -231,7 +231,7 @@ void loop(){
     char *buffer, *output;    
 
     buffer = malloc(50);
-    
+    buf_ptr += snprintf(buffer+buf_ptr, 50-buf_ptr, "OXY ");
     for(i=0; i<NUM_SENSORS; i++){
 	output = malloc(20);
 	if(flag[i] == FLAG_OFF && status[i] == ON){ // Flagged for manual shutdown
