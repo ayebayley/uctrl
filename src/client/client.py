@@ -132,7 +132,7 @@ def main():
     
     for module in config['output']:
         try:
-            importlib.import_module(module)
+            importlib.import_module('modules/'+module)
             q = queue.SimpleQueue()
             queue_dict[module] = q
             handler_instance = ModuleHandler(module, q)            
@@ -167,12 +167,12 @@ def end():
         thread.join()
         
 # Don't stop even if device gets disconnected            
-while True:
-    try:
-        main()
-    except KeyboardInterrupt:
-        end()
-        sys.exit()
-    except:
-        end()
-        continue
+# while True:
+#     try:
+#         main()
+#     except KeyboardInterrupt:
+#         end()
+#         sys.exit()
+#     except:
+#         end()
+#         continue
