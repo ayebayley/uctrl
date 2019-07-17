@@ -1,8 +1,8 @@
 /*
+  TODO Implement regdump on command ID 5 (maybe use the older regdump files as headers?)
   TODO String construction in getVal() should be optimized
     - Base strings should be global and in progmem, these strings should be copied as needed in getVal
-  TODO When to use STANDBY mode on sensors?
-  TODO Combine o2 and pressure into a single grand PoC
+  DONE Combine o2 and pressure into a single grand PoC
   DONE calibration routine
     DONE Solve problem in note (1)
   DONE Read multiple registers and parse the response buffer
@@ -61,7 +61,7 @@ void handleSensor(int i){
 	    status[i] = res;
 	else
 	    status[i] = readReg(i, STATUS_REG, node); // TODO clear errors
-    }    
+    }
 }
 
 /*
@@ -77,7 +77,7 @@ int getVal(int sensor, char *output, unsigned int cal_out=0){
        
     errval = malloc(5);
     
-    if(flag[sensor]>FLAG_NONE && flag[sensor]<FLAG_OFF ){ // Get calibration status
+    if(flag[sensor]>FLAG_NONE && flag[sensor]<FLAG_OFF){ // Get calibration status
 	strcat(calstr, itoa(cal[sensor], errval, 10));
 	strcpy(output, calstr);
 	retval = 1;
@@ -118,7 +118,7 @@ int getVal(int sensor, char *output, unsigned int cal_out=0){
 int calibrate(int data){
     int i;
     for(i=NUM_SENSORS-1; i>=0; i--)
-	if((data & (1 << i)) > 0)
+	if(((data & (1 << i)) > 0) && status[NUM_SENSORS-1-i]>0)
 	    flag[NUM_SENSORS-1-i] = FLAG_CAL;
     return 1;
 }
@@ -243,7 +243,7 @@ void loop(){
 	    handle_flag[i] = 1;
 	}
 	else{
-	    retval = getVal(i, output, 0); // Not flagged; get data
+	    retval = getVal(i, output, 0); // Not flagged; try to get data
 	    if(retval < 0)
 		handle_flag[i] = 1;
 	}
