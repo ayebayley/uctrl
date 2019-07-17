@@ -70,24 +70,20 @@ int get_i2c(int mux_addr, int mux_channel, int device_addr,
 
 void loop(){
     char *buffer, *pressure;
-    int i, retval, buf_ptr = 0;
+    int i, retval, buf_ptr = 0, buf_sz=50;
 
-    buffer = malloc(50);
+    buffer = malloc(buf_sz);
     pressure = malloc(10);
-    
+    buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr, "PRS ");
     // indexed by 1 to correspond with mux_channel
     for(i=1; i<MAX_SENSORS; i++){
 	retval = get_i2c(MUXADDR, i, SLAVE_ADDR,
 			 P_MIN0, P_MAX0, pressure);
-	buf_ptr += snprintf(buffer+buf_ptr, 50-buf_ptr,
+	buf_ptr += snprintf(buffer+buf_ptr, buf_sz-buf_ptr,
 			    " %s ", pressure);
     }
     Serial.println(buffer);
-    // Flush waits for the data transfer to complete;
-    // while this would ensure no data is buffered in the microcontroller, it would result in stale
-    //  data being sent on initial connection
     Serial.flush();
     free(buffer);
     free(pressure);
-    delay(200);
 }
