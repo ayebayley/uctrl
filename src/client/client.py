@@ -124,15 +124,15 @@ class ModuleHandler():
                 continue
         return 1;
 
-output_threads = []            
+output_threads = []
 def main():
     config = configparser.ConfigParser()
     config.read(CLIENT_CONF)    
     device = connect(config)
-    
+    sys.path.append('modules/')
     for module in config['output']:
-        try:
-            importlib.import_module('modules/'+module)
+        try:        
+            importlib.import_module(module)
             q = queue.SimpleQueue()
             queue_dict[module] = q
             handler_instance = ModuleHandler(module, q)            
@@ -165,14 +165,14 @@ def end():
             continue
     for thread in output_threads:
         thread.join()
-        
-# Don't stop even if device gets disconnected            
-# while True:
-#     try:
-#         main()
-#     except KeyboardInterrupt:
-#         end()
-#         sys.exit()
-#     except:
-#         end()
-#         continue
+
+# Don't stop even if device gets disconnected
+while True:
+    try:
+        main()
+    except KeyboardInterrupt:
+        end()
+        sys.exit()
+    except:
+        end()
+        continue
