@@ -59,7 +59,7 @@ nanlist.append("CAL")
 
 def buildJson(values):
     parsed_vals = []
-    if values[1] == "O":
+    if values[1] == "OXY":
         tag = TAG_o2
         for i in range(2, len(values)):
             if values[i].isdigit():

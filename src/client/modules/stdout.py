@@ -1,3 +1,5 @@
+
+
 def sendData(values):
     output = ""
     try:
@@ -5,6 +7,9 @@ def sendData(values):
             output += value
             output += " "
         print(output)
+        if values[1] == "O10":
+            with open('dgout', 'a') as f:
+                f.write(output + '\n')
         return 1
     except IndexError:
         return -1
