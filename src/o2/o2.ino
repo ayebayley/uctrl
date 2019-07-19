@@ -115,7 +115,7 @@ int getVal(int sensor, char *output, unsigned int cal_out=0){
     return retval;
 }
 
-int calibrate(int data){
+int speedDialCal(int data){
     int i;
     for(i=NUM_SENSORS-1; i>=0; i--)
 	if(((data & (1 << i)) > 0) && status[NUM_SENSORS-1-i]>0)
@@ -123,15 +123,38 @@ int calibrate(int data){
     return 1;
 }
 
-int onoff(int data){
-    int i;
+int speedDialOn(int data){
+    int i, sensor;
     for(i=NUM_SENSORS-1; i>=0; i--){
-	if((data & (1 << i)) > 0)
-	    flag[NUM_SENSORS-1-i] = FLAG_OFF;
-	else
-	    flag[NUM_SENSORS-1-i] = FLAG_NONE;
+	sensor=NUM_SENSORS-1-i;
+	if(((data & (1 << i)) > 0) &&
+	   (status[sensor]==IDLE || status[sensor] == STANDBY))
+	    flag[sensor] = FLAG_NONE;
     }
     return 1;
+}
+
+int speedDialOff(int data){
+    int i, sensor;
+    for(i=NUM_SENSORS-1; i>=0; i--){
+	sensor=NUM_SENSORS-1-i;
+	if((data & (1 << i)) > 0)
+	    flag[sensor] = FLAG_OFF;
+    }
+    return 1;
+}
+
+int speedDialToggle(int data){
+    int i, sensor;
+    for(i=NUM_SENSORS-1; i>=0; i--){
+	sensor=NUM_SENSORS-1-i;
+	if((data & (1 << i)) > 0){
+	    if(status[sensor]==IDLE || status[sensor] == STANDBY)
+		flag[sensor] = FLAG_NONE;
+	    else if(status[sensor] == ON)
+		flag[sensor] = FLAG_OFF;
+	}
+    }
 }
 
 int bridge(struct cmd _cmd){
@@ -186,10 +209,16 @@ int handleCommands(){
     case 0:
 	break;
     case 1: // Command ID 1: Calibration	
-	calibrate(_cmd.data);
+	speedDialCal(_cmd.data);
 	break;
     case 2: // Command ID 2: On/off
-	onoff(_cmd.data);
+	speedDialOn(_cmd.data);
+	break;
+    case 3:
+	speedDialOff(_cmd.data);
+	break;
+    case 4:
+	speedDialToggle(_cmd.data);
 	break;
     case 10: // Command ID 10: Bridge mode
 	handleflag=bridge(_cmd);
