@@ -66,7 +66,7 @@ def buildJson(values):
                 parsed_vals.append(float(float(values[i])/100))
             else:
                 parsed_vals.append(float(0))
-    elif values[1] == "P":
+    elif values[1] == "PRS":
         tag = TAG_pressure
         for i in range(2, len(values)):
             try:
