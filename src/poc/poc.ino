@@ -1,11 +1,10 @@
 
-
-
+#include <Wire.h>
 #include "o2.h"
 #include "reg.h"
 #include "datagram.h"
 #include "hsc_ssc_i2c.h"
-#include <Wire.h>
+#include "speeddial.h"
 
 //=============================Pressure Vars============================
 #define MAX_SENSORS 6
@@ -115,25 +114,6 @@ int getVal(int sensor, char *output, unsigned int cal_out=0){
     return retval;
 }
 
-int calibrate(int data){
-    int i;
-    for(i=NUM_SENSORS-1; i>=0; i--)
-	if(((data & (1 << i)) > 0) && status[NUM_SENSORS-1-i]>0)
-	    flag[NUM_SENSORS-1-i] = FLAG_CAL;
-    return 1;
-}
-
-int onoff(int data){
-    int i;
-    for(i=NUM_SENSORS-1; i>=0; i--){
-	if((data & (1 << i)) > 0)
-	    flag[NUM_SENSORS-1-i] = FLAG_OFF;
-	else
-	    flag[NUM_SENSORS-1-i] = FLAG_NONE;
-    }
-    return 1;
-}
-
 int bridge(struct cmd _cmd){
     int i, buf_ptr=0, sensor, regval, buf_sz = 100, retval, rw, handleflag;
     char *buffer, *locbuf, garbage;
@@ -186,10 +166,16 @@ int handleCommands(){
     case 0:
 	break;
     case 1: // Command ID 1: Calibration	
-	calibrate(_cmd.data);
+	handleflag=speedDialCal(_cmd.data);
 	break;
     case 2: // Command ID 2: On/off
-	onoff(_cmd.data);
+	handleflag=speedDialOn(_cmd.data);
+	break;
+    case 3:
+	handleflag=speedDialOff(_cmd.data);
+	break;
+    case 4:
+	handleflag=speedDialToggle(_cmd.data);
 	break;
     case 10: // Command ID 10: Bridge mode
 	handleflag=bridge(_cmd);
