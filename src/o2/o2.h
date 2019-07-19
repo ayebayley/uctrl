@@ -50,7 +50,7 @@ SoftwareSerial modbus(4, 5);
   Status < 0 means there's an active error code in err[] for the sensor
   Error == 0 means that there's sensor status value = valid
 
-  flag[] tracks the calibration demands from the interrupt pins,
+  flag[] tracks the calibration demands from serial commands,
     while cal tracks the actual calibration state of the boards
   flag[i] == FLAG_CAL means that calibration is in process for sensor i
   this calibration could be DONE, PROG or IDLE.. cal[i] would hold
