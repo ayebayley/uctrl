@@ -1,31 +1,27 @@
 '''
 This script reads microcontroller output on serial port 
-Expected data format is bytestring of individual sensor values seperated by whitespaces. Each datapoint is seperated by a newline (\n) and return carriage (\r) . Ex. (for n data points) input will be: 
+Expected data format is a bytestring with an identifier tag, followed by a string individual sensor values, all seperated by whitespaces. Each datapoint is seperated by a newline (\n) and return carriage (\r) . Ex. (for n data points) input will be: 
 
-b'D1 D2 D3 ... Dn\n\r'
+b'TAG D1 D2 D3 ... Dn\n\r'
 
 For each sensor Di
 
 Each datapoint is output by this script as a list of strings:
 
-[TIMESTAMP D1 D2 D3 ... Dn]
+[TIMESTAMP TAG D1 D2 D3 ... Dn]
 
 Configuration of n is done on the microcontroller. This script should work as expected regardless of how many sensors are actually connected to the microcontroller
 
-ERR* indicates errors; Error numbers denote the following: (FOR PRESSURE ONLY)
-ERR1: Chip stuck in command mode
-ERR2: Stale data (data has been already recieved)
-ERR3: Sensor diagnostic fault
-ERR4: Sensor missing (check the PCB if sensor is expected to be in place)
+ERR* indicates errors, CAL* indicates calibration, STS indicates status
 
 '''
 
 '''
-TODO Now that oxygen is connected and works, this script (especially the errors) should be generalized to input and output arbitrary sensor data
 TODO Add logging of errors and other messages (TIMEOUT, connecting to device on address)
 TODO use logic level converter to output on serial pins as well
 TODO Add reset condition if 3 or more timeouts detected
   - Number of timeouts to reset could be a config option
+DONE Now that oxygen is connected and works, this script (especially the errors) should be generalized to input and output arbitrary sensor data
 DONE Find the reason for periodic timeouts - for some reason communication seems to stop and the port needs to be restarted in order for it to work
  - This seems to be related with the number of devices the microcontroller is serving
  - Solved: this was due to buffer overflows on the microcontroller
