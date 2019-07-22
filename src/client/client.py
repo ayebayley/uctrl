@@ -1,3 +1,4 @@
+#!/bin/python3
 '''
 This script reads microcontroller output on serial port 
 Expected data format is a bytestring with an identifier tag, followed by a string individual sensor values, all seperated by whitespaces. Each datapoint is seperated by a newline (\n) and return carriage (\r) . Ex. (for n data points) input will be: 
