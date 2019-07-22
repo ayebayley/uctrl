@@ -4,7 +4,7 @@ import serial
 import time
 import configparser
 
-CONF    = 'datagram.conf'
+CONF    = '/srv/http/cgi-bin/datagram.conf'
 SET_ON  = '1'
 SET_OFF = '0'
 BRIDGE  = 'bridge'
