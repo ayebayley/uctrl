@@ -1,5 +1,5 @@
-#ifndef O2_REG
-#define O2_REG
+#ifndef REG_H
+#define REG_H
 
 /* #include "o2.h" */
 #include <ModbusMaster.h>

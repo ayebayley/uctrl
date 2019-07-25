@@ -1,5 +1,5 @@
-#ifndef O2_HEADERS
-#define O2_HEADERS
+#ifndef O2_H
+#define O2_H
 
 #include <ModbusMaster.h>
 #include <SoftwareSerial.h>
