@@ -3,5 +3,6 @@ bin/
 *.hex
 *.elf
 *.~*~
+*.out
 __pycache__
 
