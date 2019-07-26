@@ -15,7 +15,7 @@ const static int CAL_DONE  = 2;
 // Flag codes
 const static int FLAG_NONE  = 0;
 const static int FLAG_CAL   = 1;
-const static int FLAG_DONE  = 2;
+const static int FLAG_DONE  = 2; // calibration done, that is
 const static int FLAG_OFF   = 3;
 
 const int RR_SUCCESS = 1;
@@ -23,6 +23,7 @@ const int RR_FAIL = -1;
 const int WR_SUCCESS = 0;
 const int WR_FAIL = -1;
 
+const int COND0 = 0; // Regular operation or unknown state
 const int COND1 = 1; // Calibrate
 const int COND2 = 2; // Reset calibration (write reset on sensor)
 const int COND3 = 3; // Reset flag (clear 'calibration wanted' flag)
